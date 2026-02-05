@@ -1,0 +1,22 @@
+# system info pll25 on 2026.02.05.12:32:35
+system_info:
+name,value
+DEVICE,10M50DAF484C6GES
+DEVICE_FAMILY,MAX 10
+GENERATION_ID,1770294754
+#
+#
+# Files generated for pll25 on 2026.02.05.12:32:35
+files:
+filepath,kind,attributes,module,is_top
+simulation/pll25.vhd,VHDL,,pll25,true
+simulation/submodules/pll25_video_pll_0.vhd,VHDL,,pll25_video_pll_0,false
+simulation/submodules/altera_up_altpll.v,VERILOG,,altera_up_altpll,false
+simulation/submodules/altera_up_avalon_reset_from_locked_signal.v,VERILOG,,altera_up_avalon_reset_from_locked_signal,false
+#
+# Map from instance-path to kind of module
+instances:
+instancePath,module
+pll25.video_pll_0,pll25_video_pll_0
+pll25.video_pll_0.video_pll,altera_up_altpll
+pll25.video_pll_0.reset_from_locked,altera_up_avalon_reset_from_locked_signal
