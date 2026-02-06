@@ -4,7 +4,7 @@ JedecChain;
 	DefaultMfr(6E);
 
 	P ActionCode(Cfg)
-		Device PartName(10M50DAF484ES) Path("d:/github/pong26/output_files/") File("pong26Top.sof") MfrSpec(OpMask(1));
+		Device PartName(10M50DAF484ES) Path("C:/Users/ASR_ThreadRipper_EE/Documents/GitHub/pong26/output_files/") File("pong26Top.sof") MfrSpec(OpMask(1));
 
 ChainEnd;
 

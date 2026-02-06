@@ -55,6 +55,24 @@ architecture behaviour of pong26top is
 		);
 	end component pll25;
 
+--	component game_logic 
+--		Port
+--		( 
+--				vga_clk : in  STD_LOGIC;
+--				reset   : in  STD_LOGIC;
+--				HS      : in STD_LOGIC;
+--				VS      : in STD_LOGIC;
+--				blank_n : in STD_LOGIC;
+--				xPos    : in STD_LOGIC_VECTOR(10 downto 0);
+--				yPos    : in STD_LOGIC_VECTOR(9 downto 0);
+--				VGA_R	  : out std_logic_vector(3 downto 0);
+--				VGA_G	  : out std_logic_vector(3 downto 0);
+--				VGA_B	  : out std_logic_vector(3 downto 0);
+--
+--		);
+--	end component;
+
+	
 -- signals
 
 signal vga_clk 	: std_logic;
@@ -71,6 +89,9 @@ signal xPix			: integer range 0 to 799;
 signal yPix			: integer range 0 to 525;
 begin
 
+
+-- Instantite sub modules
+--
 	video : video_sync_generator port map (
 	
 			vga_clk  => vga_clk,
@@ -88,6 +109,11 @@ begin
 			vga_clk_clk        => vga_clk,        		--      vga_clk.clk
 			reset_source_reset => reset_out  			-- reset_source.reset
 		);
+--	game_logic port map (
+--	
+--	
+--	);
+	
 	resetn <= not key(0);
 	reset <= NOT resetn;
 	VGA_VS <= Vsync;
