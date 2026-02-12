@@ -107,8 +107,8 @@ begin
         HS <= cHD;
         VS <= cVD;
         blank_n <= cDEN;
-        xPos <= std_logic_vector(h_cnt - hori_back + 1 ); -- taking account of 1 clk cycle delay
-        yPos <= std_logic_vector(v_cnt - vert_back ); 
+        xPos <= std_logic_vector(h_cnt - hori_back + 1); -- taking account of 1 clk cycle delay
+        yPos <= std_logic_vector(v_cnt - vert_back); 
     end if;
 end process;
 
