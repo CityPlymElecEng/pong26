@@ -68,7 +68,14 @@ architecture behaviour of pong26top is
 			blank_n			: in std_logic;
 			xpos				: in STD_LOGIC_VECTOR(10 downto 0);
 			ypos				: in STD_LOGIC_VECTOR(9 downto 0);
-			audio				: out std_logic
+			audio				: out std_logic;
+			HEX0				: out std_logic_vector(7 downto 0);
+			HEX1				: out std_logic_vector(7 downto 0);
+			HEX2				: out std_logic_vector(7 downto 0);
+			HEX3				: out std_logic_vector(7 downto 0);
+			HEX4				: out std_logic_vector(7 downto 0);
+			HEX5				: out std_logic_vector(7 downto 0)
+
 		);
 	end component game_logic;
 			
@@ -119,7 +126,14 @@ begin
 			blank_n			=> blanking,
 			xpos				=> xpos,
 			ypos				=> ypos,
-			audio				=> arduino_io(0)
+			audio				=> arduino_io(0),
+			HEX0				=> HEX0,
+			HEX1				=> HEX1,
+			HEX2				=> HEX2,
+			HEX3				=> HEX3,
+			HEX4				=> HEX4,
+			HEX5				=> HEX5
+			
 		);
 	
 	resetn <= not key(0);

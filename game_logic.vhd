@@ -16,7 +16,15 @@ entity game_logic is
 			blank_n			: in std_logic;
 			xpos				: in STD_LOGIC_VECTOR(10 downto 0);
 			ypos				: in STD_LOGIC_VECTOR(9 downto 0);
-			audio				: out std_logic
+			audio				: out std_logic;
+			HEX0				: out std_logic_vector(7 downto 0);
+			HEX1				: out std_logic_vector(7 downto 0);
+			HEX2				: out std_logic_vector(7 downto 0);
+			HEX3				: out std_logic_vector(7 downto 0);
+			HEX4				: out std_logic_vector(7 downto 0);
+			HEX5				: out std_logic_vector(7 downto 0)
+
+			
 		);
 end entity game_logic;
 
@@ -30,7 +38,16 @@ architecture behaviour of game_logic is
 
 
 signal xPix			: integer range 0 to 799; 
-signal yPix			: integer range 0 to 525; 
+signal yPix			: integer range 0 to 525;
+
+signal ballx		: integer range 0 to 639 := 319;
+signal bally		: integer range 0 to 479 := 239;
+
+signal ballspeed	: integer := 1;
+signal balldirns	: integer range -1 to 1 := 1; -- +1 down, -1 up 0 no vertical movement
+signal balldirew	: integer range -1 to 1 := 1; -- +1 right, -1 left 0 no horizontal movement
+
+signal ballsize	: integer range 1 to 20 := 4;
 
 
 begin
@@ -41,7 +58,11 @@ begin
 	
 	process(xpix, ypix, blank_n)
 		begin
-		if blank_n = '1' then
+			VGA_R <= "0000";-- set default to black
+			VGA_G <= "0000";
+			VGA_B <= "0000";
+		
+		if blank_n = '1' then -- inside display area
 			if (xpix = ypix) or (xpix - 160 = ypix) then
 				VGA_R <= "1111";
 				VGA_G <= "0000";
@@ -55,7 +76,38 @@ begin
 				VGA_G <= "0000";
 				VGA_B <= "0000";
 			end if;
+			if (ballx > xpix) and (ballx < (xpix + ballsize)) and (bally >ypix) and (bally < (ypix + ballsize)) then
+				vga_r <= "0000";
+				vga_g <= "0000";
+				vga_b <= "1111";
+			end if;
 		end if;
-		end process;
-	-- end of VGA testing
+	end process;
+	-- movement process
+	
+	process(reset, VS, xpix, ypix)
+		begin
+			if reset = '0' then
+				ballx <= 319;
+				bally <= 239;
+			elsif rising_edge(VS) then
+				ballx <= ballx + ballspeed * balldirew;
+				bally <= bally + ballspeed * balldirns;
+
+				if bally >= 479  then
+					balldirns <= -1;
+					bally <= 478;
+				elsif bally <= 10 then
+					balldirns <= 1;
+					bally <= 11;
+				end if;
+				if ballx >= 639  then
+					balldirew <= -1;
+					ballx <= 638;
+				elsif ballx <= 10 then
+					balldirew <= 1;
+					ballx <= 11;
+				end if;
+			end if;	
+	end process;
 end behaviour;
