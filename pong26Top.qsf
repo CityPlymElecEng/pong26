@@ -425,6 +425,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[32]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[33]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[34]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[35]
+set_global_assignment -name QIP_FILE paddles/synthesis/paddles.qip
 set_global_assignment -name VHDL_FILE game_logic.vhd
 set_global_assignment -name QIP_FILE pll25/synthesis/pll25.qip
 set_global_assignment -name VHDL_FILE video_sync_generator.vhd

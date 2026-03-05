@@ -8,6 +8,7 @@ use ieee.numeric_std.all;
 entity game_logic is
 	port(
 			pixel_clk		: in std_logic;
+			adc_clk			: in std_logic;
 			reset				: in std_logic;
 			VGA_R				: out std_logic_vector(3 downto 0);
 			VGA_G				: out std_logic_vector(3 downto 0);
@@ -32,10 +33,24 @@ architecture behaviour of game_logic is
 
 -- instantiate any components
 
+	component paddles is
+		port (
+			CLOCK : in  std_logic                     := 'X'; -- clk
+			RESET : in  std_logic                     := 'X'; -- reset
+			CH0   : out std_logic_vector(11 downto 0);        -- CH0
+			CH1   : out std_logic_vector(11 downto 0);        -- CH1
+			CH2   : out std_logic_vector(11 downto 0);        -- CH2
+			CH3   : out std_logic_vector(11 downto 0);        -- CH3
+			CH4   : out std_logic_vector(11 downto 0);        -- CH4
+			CH5   : out std_logic_vector(11 downto 0)        -- CH5
+		);
+	end component paddles;
+
 
 
 -- signals
 
+signal resetn		: std_logic;
 
 signal xPix			: integer range 0 to 799; 
 signal yPix			: integer range 0 to 525;
@@ -43,14 +58,39 @@ signal yPix			: integer range 0 to 525;
 signal ballx		: integer range 0 to 639 := 319;
 signal bally		: integer range 0 to 479 := 239;
 
-signal ballspeed	: integer := 1;
+signal ballspeed	: integer := 4;
 signal balldirns	: integer range -1 to 1 := 1; -- +1 down, -1 up 0 no vertical movement
 signal balldirew	: integer range -1 to 1 := 1; -- +1 right, -1 left 0 no horizontal movement
 
-signal ballsize	: integer range 1 to 20 := 4;
+signal ballsize	: integer range 1 to 20 := 10;
 
+signal paddlesize : integer := 20;
+signal paddlewidth :	integer := 10;
+
+signal paddle1		: std_logic_vector (11 downto 0);
+signal paddle2		: std_logic_vector (11 downto 0);
+
+signal paddle1_val : integer := 240; -- range 0 to 480;
+signal paddle2_val : integer := 240; -- range 0 to 480;
+
+signal cycle	: integer range 0 to 1 := 0; 
 
 begin
+
+	pad0 : component paddles
+		port map (
+			CLOCK => ADC_CLK, --      clk.clk
+			RESET => RESETn, 	--    reset.reset
+			CH0   => paddle1,   -- readings.CH0
+			CH1   => paddle2   --         .CH1
+--			CH2   => CONNECTED_TO_CH2,   --         .CH2
+--			CH3   => CONNECTED_TO_CH3,   --         .CH3
+--			CH4   => CONNECTED_TO_CH4,   --         .CH4
+--			CH5   => CONNECTED_TO_CH5   --         .CH5
+		);
+	
+	resetn <= not reset;
+	
 	-- testing output to VGA display 
 	-- two red diagonal lines on a white background
 	xpix <= to_integer(unsigned(xpos)); -- changing position to numeric for ease
@@ -76,6 +116,19 @@ begin
 				VGA_G <= "0000";
 				VGA_B <= "0000";
 			end if;
+			-- display paddles
+			if (paddle1_val < ypix + paddlesize) and (paddle1_val > ypix - paddlesize) and
+				(xpix > 40) and (xpix < 40 + paddlewidth) then
+				VGA_R <= "0111";
+				VGA_G <= "0111";
+				VGA_B <= "0000";
+			end if;
+			if (paddle2_val < ypix + paddlesize) and (paddle2_val > ypix - paddlesize) and
+				(xpix > 590) and (xpix < 590 + paddlewidth) then
+				VGA_R <= "0111";
+				VGA_G <= "0111";
+				VGA_B <= "0000";
+			end if;
 			if (ballx > xpix) and (ballx < (xpix + ballsize)) and (bally >ypix) and (bally < (ypix + ballsize)) then
 				vga_r <= "0000";
 				vga_g <= "0000";
@@ -83,6 +136,7 @@ begin
 			end if;
 		end if;
 	end process;
+	
 	-- movement process
 	
 	process(reset, VS, xpix, ypix)
@@ -90,9 +144,17 @@ begin
 			if reset = '0' then
 				ballx <= 319;
 				bally <= 239;
+				paddle1_val <= 240;
+				paddle2_val <= 240;
 			elsif rising_edge(VS) then
 				ballx <= ballx + ballspeed * balldirew;
 				bally <= bally + ballspeed * balldirns;
+				
+				paddle1_val <= to_integer(unsigned(paddle1(11 downto 2)));
+				if abs(to_integer(unsigned(paddle2(11 downto 2))) - paddle2_val) < 30 then 
+					paddle2_val <= to_integer(unsigned(paddle2(11 downto 2)));
+					cycle <= 1;
+				end if;
 
 				if bally >= 479  then
 					balldirns <= -1;
@@ -104,10 +166,15 @@ begin
 				if ballx >= 639  then
 					balldirew <= -1;
 					ballx <= 638;
+					-- player1 scores
 				elsif ballx <= 10 then
 					balldirew <= 1;
 					ballx <= 11;
+					-- player2 scores
 				end if;
+				
+				-- detect collisions with paddles
+				
 			end if;	
 	end process;
 end behaviour;

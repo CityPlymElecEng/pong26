@@ -12,6 +12,7 @@ use ieee.numeric_std.all;
 entity pong26Top is
 	port(
 			MAX10_CLK1_50  : in  std_logic;
+			ADC_CLK_10		: in  std_logic;
 			KEY				: in  std_logic_vector(1 downto 0);
 			SW					: in  std_logic_vector(9 downto 0);
 			LEDR				: out std_logic_vector(9 downto 0);
@@ -60,6 +61,7 @@ architecture behaviour of pong26top is
 		port (
 		
 			pixel_clk		: in std_logic;
+			adc_clk			: in std_logic;
 			reset				: in std_logic;
 			VGA_R				: out std_logic_vector(3 downto 0);
 			VGA_G				: out std_logic_vector(3 downto 0);
@@ -118,6 +120,7 @@ begin
 	gl0 : game_logic port map(
 			
 			pixel_clk		=> vga_clk,
+			adc_clk			=> adc_clk_10,
 			reset          => reset,
 			VGA_R				=> VGA_R,
 			VGA_G				=> VGA_G,
