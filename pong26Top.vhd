@@ -120,7 +120,7 @@ begin
 	gl0 : game_logic port map(
 			
 			pixel_clk		=> vga_clk,
-			adc_clk			=> adc_clk_10,
+			adc_clk			=> MAX10_CLK1_50,
 			reset          => reset,
 			VGA_R				=> VGA_R,
 			VGA_G				=> VGA_G,

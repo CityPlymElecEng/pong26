@@ -33,18 +33,29 @@ architecture behaviour of game_logic is
 
 -- instantiate any components
 
-	component paddles is
-		port (
-			CLOCK : in  std_logic                     := 'X'; -- clk
-			RESET : in  std_logic                     := 'X'; -- reset
-			CH0   : out std_logic_vector(11 downto 0);        -- CH0
-			CH1   : out std_logic_vector(11 downto 0);        -- CH1
-			CH2   : out std_logic_vector(11 downto 0);        -- CH2
-			CH3   : out std_logic_vector(11 downto 0);        -- CH3
-			CH4   : out std_logic_vector(11 downto 0);        -- CH4
-			CH5   : out std_logic_vector(11 downto 0)        -- CH5
-		);
-	end component paddles;
+  component paddles is  -- get the current values of the potentiometers
+    port (
+      -- Clocks
+      MAX10_CLK1_50 : in  std_logic;
+      -- KEY
+      reset         : in  std_logic;
+      -- paddle positions from adc
+      player1       : out std_logic_vector(7 downto 0);
+      player2       : out std_logic_vector(7 downto 0)
+      );
+  end component paddles;
+--  component paddles is
+--		port (
+--			CLOCK : in  std_logic                     := 'X'; -- clk
+--			RESET : in  std_logic                     := 'X'; -- reset
+--			CH0   : out std_logic_vector(11 downto 0);        -- CH0
+--			CH1   : out std_logic_vector(11 downto 0);        -- CH1
+--			CH2   : out std_logic_vector(11 downto 0);        -- CH2
+--			CH3   : out std_logic_vector(11 downto 0);        -- CH3
+--			CH4   : out std_logic_vector(11 downto 0);        -- CH4
+--			CH5   : out std_logic_vector(11 downto 0)        -- CH5
+--		);
+--	end component paddles;
 
 
 
@@ -67,8 +78,12 @@ signal ballsize	: integer range 1 to 20 := 10;
 signal paddlesize : integer := 20;
 signal paddlewidth :	integer := 10;
 
-signal paddle1		: std_logic_vector (11 downto 0);
-signal paddle2		: std_logic_vector (11 downto 0);
+signal paddle1		: std_logic_vector (7 downto 0);
+signal paddle2		: std_logic_vector (7 downto 0);
+signal dummy0		: std_logic_vector (7 downto 0);
+signal dummy1		: std_logic_vector (7 downto 0);
+signal dummy2		: std_logic_vector (7 downto 0);
+signal dummy3		: std_logic_vector (7 downto 0);
 
 signal paddle1_val : integer := 240; -- range 0 to 480;
 signal paddle2_val : integer := 240; -- range 0 to 480;
@@ -77,17 +92,17 @@ signal cycle	: integer range 0 to 1 := 0;
 
 begin
 
-	pad0 : component paddles
-		port map (
-			CLOCK => ADC_CLK, --      clk.clk
-			RESET => RESETn, 	--    reset.reset
-			CH0   => paddle1,   -- readings.CH0
-			CH1   => paddle2   --         .CH1
---			CH2   => CONNECTED_TO_CH2,   --         .CH2
---			CH3   => CONNECTED_TO_CH3,   --         .CH3
---			CH4   => CONNECTED_TO_CH4,   --         .CH4
---			CH5   => CONNECTED_TO_CH5   --         .CH5
-		);
+--	pad0 : component paddles
+--		port map (
+--			CLOCK => ADC_CLK, --      clk.clk
+--			RESET => RESETn, 	--    reset.reset
+--			CH0   => paddle1,   -- readings.CH0
+--			CH1   => dummy0,   --         .CH1
+--			CH2   => dummy1,   --         .CH2
+--			CH3   => dummy2,   --         .CH3
+--			CH4   => dummy3,   --         .CH4
+--			CH5   => paddle2   --         .CH5
+--		);
 	
 	resetn <= not reset;
 	
@@ -95,7 +110,10 @@ begin
 	-- two red diagonal lines on a white background
 	xpix <= to_integer(unsigned(xpos)); -- changing position to numeric for ease
 	ypix <= to_integer(unsigned(ypos)); -- of calculations
-	
+	paddlePositions : paddles port map (adc_clk, resetn, paddle1, paddle2);
+	paddle1_val <= (to_integer(unsigned(paddle1)))*2;
+	paddle2_val <= (to_integer(unsigned(paddle2)))*2;
+
 	process(xpix, ypix, blank_n)
 		begin
 			VGA_R <= "0000";-- set default to black
@@ -144,17 +162,19 @@ begin
 			if reset = '0' then
 				ballx <= 319;
 				bally <= 239;
-				paddle1_val <= 240;
-				paddle2_val <= 240;
+--				paddle1_val <= 240;
+--				paddle2_val <= 240;
 			elsif rising_edge(VS) then
 				ballx <= ballx + ballspeed * balldirew;
 				bally <= bally + ballspeed * balldirns;
 				
-				paddle1_val <= to_integer(unsigned(paddle1(11 downto 2)));
-				if abs(to_integer(unsigned(paddle2(11 downto 2))) - paddle2_val) < 30 then 
-					paddle2_val <= to_integer(unsigned(paddle2(11 downto 2)));
-					cycle <= 1;
-				end if;
+--				paddle1_val <= to_integer(unsigned(paddle1(11 downto 2)));
+--				paddle2_val <= to_integer(unsigned(paddle2(11 downto 2)));				
+--				-- attempt to filter bad readings from adc
+--				if abs(to_integer(unsigned(paddle2(11 downto 2))) - paddle2_val) < 70 then 
+--					paddle2_val <= to_integer(unsigned(paddle2(11 downto 2)));
+--
+--				end if;
 
 				if bally >= 479  then
 					balldirns <= -1;
