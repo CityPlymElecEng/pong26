@@ -8,7 +8,7 @@ use ieee.numeric_std.all;
 entity game_logic is
 	port(
 			pixel_clk		: in std_logic;
-			adc_clk			: in std_logic;
+			max10_clk1_50	: in std_logic;
 			reset				: in std_logic;
 			VGA_R				: out std_logic_vector(3 downto 0);
 			VGA_G				: out std_logic_vector(3 downto 0);
@@ -110,7 +110,7 @@ begin
 	-- two red diagonal lines on a white background
 	xpix <= to_integer(unsigned(xpos)); -- changing position to numeric for ease
 	ypix <= to_integer(unsigned(ypos)); -- of calculations
-	paddlePositions : paddles port map (adc_clk, resetn, paddle1, paddle2);
+	paddlePositions : paddles port map (max10_clk1_50, resetn, paddle1, paddle2);
 	paddle1_val <= (to_integer(unsigned(paddle1)))*2;
 	paddle2_val <= (to_integer(unsigned(paddle2)))*2;
 

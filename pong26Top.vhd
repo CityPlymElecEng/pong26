@@ -61,7 +61,7 @@ architecture behaviour of pong26top is
 		port (
 		
 			pixel_clk		: in std_logic;
-			adc_clk			: in std_logic;
+			max10_clk1_50	: in std_logic;
 			reset				: in std_logic;
 			VGA_R				: out std_logic_vector(3 downto 0);
 			VGA_G				: out std_logic_vector(3 downto 0);
@@ -120,7 +120,7 @@ begin
 	gl0 : game_logic port map(
 			
 			pixel_clk		=> vga_clk,
-			adc_clk			=> MAX10_CLK1_50,
+			max10_clk1_50	=> MAX10_CLK1_50,
 			reset          => reset,
 			VGA_R				=> VGA_R,
 			VGA_G				=> VGA_G,
