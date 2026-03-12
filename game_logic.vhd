@@ -62,6 +62,7 @@ architecture behaviour of game_logic is
 -- signals
 
 signal resetn		: std_logic;
+signal titleSize	: integer range 0 to 511 := 80;  -- Marquee size
 
 signal xPix			: integer range 0 to 799; 
 signal yPix			: integer range 0 to 525;
@@ -111,8 +112,8 @@ begin
 	xpix <= to_integer(unsigned(xpos)); -- changing position to numeric for ease
 	ypix <= to_integer(unsigned(ypos)); -- of calculations
 	paddlePositions : paddles port map (max10_clk1_50, resetn, paddle1, paddle2);
-	paddle1_val <= (to_integer(unsigned(paddle1)))*2;
-	paddle2_val <= (to_integer(unsigned(paddle2)))*2;
+	paddle1_val <= (to_integer(unsigned(paddle1)))*2 + titlesize; -- avoid marquee
+	paddle2_val <= (to_integer(unsigned(paddle2)))*2 + titlesize;
 
 	process(xpix, ypix, blank_n)
 		begin
@@ -121,14 +122,10 @@ begin
 			VGA_B <= "0000";
 		
 		if blank_n = '1' then -- inside display area
-			if (xpix = ypix) or (xpix - 160 = ypix) then
-				VGA_R <= "1111";
-				VGA_G <= "0000";
-				VGA_B <= "0000";
-			elsif (xpix >= 0 ) and (xpix < 640) and (ypix >= 0) and (ypix < 480) then
-				VGA_R <= "1111";
-				VGA_G <= "1111";
-				VGA_B <= "1111";
+			if (xpix >= 0 ) and (xpix < 640) and (ypix >= titleSize) and (ypix < 480) then
+				VGA_R <= "0001";
+				VGA_G <= "0111";
+				VGA_B <= "0001";
 			else 
 				VGA_R <= "0000";
 				VGA_G <= "0000";
@@ -137,15 +134,15 @@ begin
 			-- display paddles
 			if (paddle1_val < ypix + paddlesize) and (paddle1_val > ypix - paddlesize) and
 				(xpix > 40) and (xpix < 40 + paddlewidth) then
-				VGA_R <= "0111";
-				VGA_G <= "0111";
+				VGA_R <= "1111";
+				VGA_G <= "1111";
 				VGA_B <= "0000";
 			end if;
 			if (paddle2_val < ypix + paddlesize) and (paddle2_val > ypix - paddlesize) and
 				(xpix > 590) and (xpix < 590 + paddlewidth) then
-				VGA_R <= "0111";
-				VGA_G <= "0111";
-				VGA_B <= "0000";
+				VGA_R <= "0000";
+				VGA_G <= "1111";
+				VGA_B <= "1111";
 			end if;
 			if (ballx > xpix) and (ballx < (xpix + ballsize)) and (bally >ypix) and (bally < (ypix + ballsize)) then
 				vga_r <= "0000";
@@ -179,9 +176,9 @@ begin
 				if bally >= 479  then
 					balldirns <= -1;
 					bally <= 478;
-				elsif bally <= 10 then
+				elsif bally <= titleSize + 10 then
 					balldirns <= 1;
-					bally <= 11;
+					bally <= titleSize + 15;
 				end if;
 				if ballx >= 639  then
 					balldirew <= -1;
@@ -194,6 +191,18 @@ begin
 				end if;
 				
 				-- detect collisions with paddles
+				if (paddle1_val < bally + paddlesize) and (paddle1_val > bally - paddlesize) and
+				(ballx > 50) and (ballx < 50 + paddlewidth) then
+					balldirew <= 1;
+					ballx <= 60;
+				end if;
+
+				if (paddle2_val < bally + paddlesize) and (paddle2_val > bally - paddlesize) and
+				(ballx > 590) and (ballx < 590 + paddlewidth) then
+					balldirew <= -1;
+					ballx <= 580;
+				end if;
+
 				
 			end if;	
 	end process;
