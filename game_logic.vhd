@@ -79,6 +79,17 @@ signal scrData		: std_logic_vector (7 downto 0);
 signal nWr			: std_logic;
 signal txtRGB		: std_logic;
 
+signal plyr1Score	: integer := 0;
+signal plyr2Score	: integer := 0;
+signal player1wins : std_logic;
+signal player2wins : std_logic;
+signal plyr1units : integer;
+signal plyr1tens  : integer;
+signal plyr2units : integer;
+signal plyr2tens  : integer;
+
+signal memwrState : integer := 0;
+
 signal resetn		: std_logic;
 signal titleSize	: integer range 0 to 511 := 80;  -- Marquee size
 
@@ -186,6 +197,11 @@ begin
 			if reset = '0' then
 				ballx <= 319;
 				bally <= 239;
+				plyr1score <= 0;
+				plyr2score <= 0;
+				player1wins <= '0';
+				player2wins <= '0';
+				
 --				paddle1_val <= 240;
 --				paddle2_val <= 240;
 			elsif rising_edge(VS) then
@@ -207,14 +223,24 @@ begin
 					balldirns <= 1;
 					bally <= titleSize + 15;
 				end if;
-				if ballx >= 639  then
+				if ballx >= 639  then -- player1 scores
 					balldirew <= -1;
-					ballx <= 638;
-					-- player1 scores
-				elsif ballx <= 10 then
+					plyr1Score <= plyr1Score + 1;
+					if plyr1score = 10 then
+						player1Wins <= '1';
+						-- initiate winning anthem	
+					end if;
+					ballx <= 400;
+					
+				elsif ballx <= 10 then -- player2 scores
 					balldirew <= 1;
-					ballx <= 11;
-					-- player2 scores
+					plyr2Score <= plyr2Score + 1;
+					if plyr2score = 10 then
+						player2Wins <= '1';
+						-- initiate winning anthem
+					end if;
+					ballx <= 200;
+					
 				end if;
 				
 				-- detect collisions with paddles
@@ -233,4 +259,67 @@ begin
 				
 			end if;	
 	end process;
+	-- scoring to screen process
+	process(reset, pixel_clk, plyr1score, plyr2Score)
+		begin
+			if reset = '0' then
+				
+			elsif rising_edge(pixel_clk) then
+				plyr1tens <= 48 + plyr1score / 10;  -- convert to ascii also
+				plyr1units <= 48 + plyr1Score mod 10;
+				plyr2tens <= 48 + plyr2score / 10;
+				plyr2units <= 48 + plyr2Score mod 10;
+			
+				case memwrState is
+					when 0 => -- write to memory
+						scrAddress <= std_logic_vector(to_unsigned( 82, 12));
+						scrdata <= std_logic_vector(to_unsigned(plyr1tens, 8));
+						memwrState <= 1;
+					when 1 =>
+						nwr <= '1';
+						memwrstate <= 2;
+					when 2 =>
+						nwr <= '0';
+						memwrState <= 3;
+										
+					when 3 => 
+						scrAddress <= std_logic_vector(to_unsigned( 83, 12));
+						scrdata <= std_logic_vector(to_unsigned(plyr1units, 8));
+						memwrState <= 4;
+					when 4 =>
+						nwr <= '1';
+						memwrstate <= 5;
+					when 5 =>
+						nwr <= '0';
+						memwrState <= 6;
+						
+					when 6 => -- write to memory
+						scrAddress <= std_logic_vector(to_unsigned( 116, 12));
+						scrdata <= std_logic_vector(to_unsigned(plyr2tens, 8));
+						memwrState <= 7;
+					when 7 =>
+						nwr <= '1';
+						memwrstate <= 8;
+					when 8 =>
+						nwr <= '0';
+						memwrState <= 9;
+										
+					when 9 => 
+						scrAddress <= std_logic_vector(to_unsigned( 117, 12));
+						scrdata <= std_logic_vector(to_unsigned(plyr2units, 8));
+						memwrState <= 10;
+					when 10 =>
+						nwr <= '1';
+						memwrstate <= 11;
+					when 11 =>
+						nwr <= '0';
+						memwrState <= 0;
+					when others =>
+						memwrstate <= 0;
+						
+				end case;
+			end if;
+		end process;
+
+	
 end behaviour;
