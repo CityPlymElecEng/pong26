@@ -47,7 +47,7 @@ architecture behaviour of game_logic is
   component txtscreen is
 		port (
     hp, vp :    integer;
-    addr   : in std_logic_vector(10 downto 0);  -- text screen ram
+    addr   : in std_logic_vector(11 downto 0);  -- text screen ram
     data   : in std_logic_vector(7 downto 0);
     nWr    : in std_logic;
     pClk   : in std_logic;
@@ -74,7 +74,7 @@ architecture behaviour of game_logic is
 
 -- signals
 
-signal scrAddress : std_logic_vector (10 downto 0);
+signal scrAddress : std_logic_vector (11 downto 0);
 signal scrData		: std_logic_vector (7 downto 0);
 signal nWr			: std_logic;
 signal txtRGB		: std_logic;

@@ -9,7 +9,7 @@ entity txtScreen is
 --       generic(); -- pixel position
   port(
     hp, vp :    integer;
-    addr   : in std_logic_vector(10 downto 0);  -- text screen ram
+    addr   : in std_logic_vector(11 downto 0);  -- text screen ram
     data   : in std_logic_vector(7 downto 0);
     nWr    : in std_logic;
     pClk   : in std_logic;
@@ -22,7 +22,7 @@ end txtScreen;
 
 architecture RTL of txtScreen is
 
-  component font12rom
+  component fontrom
     port
       (
         address : in  std_logic_vector (10 downto 0);
@@ -30,33 +30,33 @@ architecture RTL of txtScreen is
         q       : out std_logic_vector (7 downto 0)
         );
   end component;
-  component screenRam IS
+  component vidmem IS
 	PORT
 	(
 		clock		: IN STD_LOGIC  := '1';
 		data		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
-		rdaddress		: IN STD_LOGIC_VECTOR (10 DOWNTO 0);
-		wraddress		: IN STD_LOGIC_VECTOR (10 DOWNTO 0);
+		rdaddress		: IN STD_LOGIC_VECTOR (11 DOWNTO 0);
+		wraddress		: IN STD_LOGIC_VECTOR (11 DOWNTO 0);
 		wren		: IN STD_LOGIC  := '0';
 		q		: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
 	);
-  END component screenRam;
+  END component vidmem;
 
   signal char_row_addr : std_logic_vector(10 downto 0);
   signal q_8x12        : std_logic_vector(7 downto 0);
-  signal vaddr         : std_logic_vector(10 downto 0);
+  signal vaddr         : std_logic_vector(11 downto 0);
   signal vdata         : std_logic_vector(7 downto 0);
   signal shifter       : std_logic_vector(7 downto 0);
   signal doubled       : std_logic := '0';
 
 begin
 
-  font8x12_inst : font12rom port map (
+  font8x12_inst : fontrom port map (
     address => char_row_addr,
     clock   => pClk,
     q       => q_8x12
     );
-  vidmem_inst : screenRam port map (
+  vidmem_inst : vidmem port map (
     clock     => pClk,
     data      => data,
     rdaddress => vAddr,
@@ -64,7 +64,7 @@ begin
     wren      => nWr,
     q         => vData
     );
-  vAddr         <= std_logic_vector(to_unsigned(40*((vp-2)/24) + (hp/16), 11));
+  vAddr         <= std_logic_vector(to_unsigned(40*((vp-2)/24) + (hp/16), 12));
   char_row_addr <= std_logic_vector(to_unsigned(((conv_integer(vdata(7 downto 0)) -32)*12 + ((vp-2)/2) mod 12), 11));
 
   process(pClk)

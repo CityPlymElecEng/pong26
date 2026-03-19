@@ -1,0 +1,13 @@
+
+
+D:/GitHub/pong26/screenram.v
+
+Mar 19 11AM:41:45>: The following design file, which has identical name but a different extension 
+from the specified variation file, already exists in the working directory:
+
+screenRam.vhd
+
+This may create a conflict of design files and/or lead to undesirable side
+effects.
+
+Is it OK to continue file generation?
