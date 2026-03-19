@@ -44,6 +44,19 @@ architecture behaviour of game_logic is
       player2       : out std_logic_vector(7 downto 0)
       );
   end component paddles;
+  component txtscreen is
+		port (
+    hp, vp :    integer;
+    addr   : in std_logic_vector(10 downto 0);  -- text screen ram
+    data   : in std_logic_vector(7 downto 0);
+    nWr    : in std_logic;
+    pClk   : in std_logic;
+    nblnk  : in std_logic;
+
+    pix : out std_logic
+
+    );
+	end component txtScreen;
 --  component paddles is
 --		port (
 --			CLOCK : in  std_logic                     := 'X'; -- clk
@@ -60,6 +73,11 @@ architecture behaviour of game_logic is
 
 
 -- signals
+
+signal scrAddress : std_logic_vector (10 downto 0);
+signal scrData		: std_logic_vector (7 downto 0);
+signal nWr			: std_logic;
+signal txtRGB		: std_logic;
 
 signal resetn		: std_logic;
 signal titleSize	: integer range 0 to 511 := 80;  -- Marquee size
@@ -111,6 +129,9 @@ begin
 	-- two red diagonal lines on a white background
 	xpix <= to_integer(unsigned(xpos)); -- changing position to numeric for ease
 	ypix <= to_integer(unsigned(ypos)); -- of calculations
+	txtscr : txtScreen  -- memory mapped screen display for 40 x 24 ascii characters
+    port map (xpix, ypix, scrAddress, scrData, nWr, pixel_clk, blank_n, txtRGB);
+
 	paddlePositions : paddles port map (max10_clk1_50, resetn, paddle1, paddle2);
 	paddle1_val <= (to_integer(unsigned(paddle1)))*2 + titlesize; -- avoid marquee
 	paddle2_val <= (to_integer(unsigned(paddle2)))*2 + titlesize;
@@ -131,6 +152,12 @@ begin
 				VGA_G <= "0000";
 				VGA_B <= "0000";
 			end if;
+			-- text display
+			if (txtRGB = '1') then 
+				VGA_R <= "1111";
+				VGA_G <= "1111";
+				VGA_B <= "1111";
+			end if;	
 			-- display paddles
 			if (paddle1_val < ypix + paddlesize) and (paddle1_val > ypix - paddlesize) and
 				(xpix > 40) and (xpix < 40 + paddlewidth) then
