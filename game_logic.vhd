@@ -88,6 +88,17 @@ signal plyr1tens  : integer;
 signal plyr2units : integer;
 signal plyr2tens  : integer;
 
+signal blip			: std_logic := '0' ; -- initiate a sound
+signal blop			: std_logic := '0' ;
+signal blipping	: std_logic := '0' ;	-- latches the sound request
+signal blopping	: std_logic := '0' ;
+signal blipcount  : integer;
+signal blopcount  : integer;
+signal bliptime   : integer;
+signal bloptime   : integer;
+signal sound    	: std_logic := '0' ;
+
+
 signal memwrState : integer := 0;
 
 signal resetn		: std_logic;
@@ -192,7 +203,7 @@ begin
 	
 	-- movement process
 	
-	process(reset, VS, xpix, ypix)
+	process(reset, VS, xpix, ypix, blipping, blopping)
 		begin
 			if reset = '0' then
 				ballx <= 319;
@@ -220,13 +231,21 @@ begin
 --					paddle2_val <= to_integer(unsigned(paddle2(11 downto 2)));
 --
 --				end if;
+				if blip = '1' and blipping = '1' then
+					blip <= '0';
+				end if;
+				if blop = '1' and blopping = '1' then
+					blop <= '0';
+				end if;
 
 				if bally >= 479  then
 					balldirns <= -1;
 					bally <= 478;
+					blip <= '1';
 				elsif bally <= titleSize + 10 then
 					balldirns <= 1;
 					bally <= titleSize + 15;
+					blip <= '1';
 				end if;
 				if ballx >= 639  then -- player1 scores
 					balldirew <= -1;
@@ -236,6 +255,7 @@ begin
 						-- initiate winning anthem	
 					end if;
 					ballx <= 400;
+					blop <= '1';
 					
 				elsif ballx <= 10 then -- player2 scores
 					balldirew <= 1;
@@ -245,6 +265,7 @@ begin
 						-- initiate winning anthem
 					end if;
 					ballx <= 200;
+					blop <= '1';
 					
 				end if;
 				
@@ -253,17 +274,49 @@ begin
 				(ballx > 50) and (ballx < 50 + paddlewidth) then
 					balldirew <= 1;
 					ballx <= 60;
+					blip <= '1';
 				end if;
 
 				if (paddle2_val < bally + paddlesize) and (paddle2_val > bally - paddlesize) and
 				(ballx > 590) and (ballx < 590 + paddlewidth) then
 					balldirew <= -1;
 					ballx <= 580;
+					blip <= '1';
 				end if;
 
 				
 			end if;	
 	end process;
+	
+	-- make a blip sound
+	process ( blip, pixel_clk, reset )
+		begin
+			if reset = '0' then
+				blipping <= '0';
+			elsif rising_edge( pixel_clk) then
+				if blip = '1' then -- make a noise
+					blipping <= '1';
+				end if;
+				if blipping = '1' then -- make a sound for half a second
+					if bliptime < 2500000 then
+						if blipcount > 25000 then -- make the sound
+							blipcount <= 0;
+							sound <= not sound;
+						else
+							blipcount <= blipcount + 1;
+						end if;
+						bliptime <= bliptime + 1;
+					else 
+						bliptime <= 0;
+						blipping <= '0';
+					end if;
+				end if;
+			end if;
+		end process;
+	audio <= sound;
+				
+				
+			
 	-- scoring to screen process
 	process(reset, pixel_clk, plyr1score, plyr2Score)
 		begin
