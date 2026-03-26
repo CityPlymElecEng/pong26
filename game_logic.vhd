@@ -205,7 +205,12 @@ begin
 --				paddle1_val <= 240;
 --				paddle2_val <= 240;
 			elsif rising_edge(VS) then
-				ballx <= ballx + ballspeed * balldirew;
+				if player1wins = '1' OR player2wins = '1' then
+					ballx <= 319;
+					-- show winning screen maybe
+				else
+					ballx <= ballx + ballspeed * balldirew;
+				end if;
 				bally <= bally + ballspeed * balldirns;
 				
 --				paddle1_val <= to_integer(unsigned(paddle1(11 downto 2)));
