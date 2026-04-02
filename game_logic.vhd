@@ -4,6 +4,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.dw.all;
+use work.CHAR2STD.all;
 
 entity game_logic is
 	port(
@@ -56,7 +58,18 @@ architecture behaviour of game_logic is
     pix : out std_logic
 
     );
-	end component txtScreen;
+  end component txtScreen;
+	
+  component sevsegxdec is --- player score display on the seven segment output
+    port
+      (
+        binIn  : in  std_logic_vector (3 downto 0);
+        hexout : out std_logic_vector (6 downto 0)
+        );
+
+  end component sevsegxdec;
+ 
+ 
 --  component paddles is
 --		port (
 --			CLOCK : in  std_logic                     := 'X'; -- clk
@@ -97,6 +110,7 @@ signal blopcount  : integer;
 signal bliptime   : integer;
 signal bloptime   : integer;
 signal sound    	: std_logic := '0' ;
+signal soundb   	: std_logic := '0' ;
 
 
 signal memwrState : integer := 0;
@@ -114,7 +128,8 @@ signal ballspeed	: integer := 4;
 signal balldirns	: integer range -1 to 1 := 1; -- +1 down, -1 up 0 no vertical movement
 signal balldirew	: integer range -1 to 1 := 1; -- +1 right, -1 left 0 no horizontal movement
 
-signal ballsize	: integer range 1 to 20 := 10;
+signal ballsize	: integer range 1 to 20 := 2;
+signal balldraw	: std_logic;
 
 signal paddlesize : integer := 20;
 signal paddlewidth :	integer := 10;
@@ -130,6 +145,19 @@ signal paddle1_val : integer := 240; -- range 0 to 480;
 signal paddle2_val : integer := 240; -- range 0 to 480;
 
 signal cycle	: integer range 0 to 1 := 0; 
+
+-- sprite for ball
+  signal ball : std_logic_vector(99 downto 0) :=
+    ('0', '0', '0', '0', '1', '1', '0', '0', '0', '0',
+     '0', '0', '1', '1', '1', '1', '1', '1', '0', '0',
+     '0', '1', '1', '1', '1', '1', '1', '1', '1', '0',
+     '0', '1', '1', '1', '1', '1', '1', '1', '1', '0',
+     '1', '1', '1', '1', '0', '0', '1', '1', '1', '1',
+     '1', '1', '1', '1', '0', '0', '1', '1', '1', '1',
+     '0', '1', '1', '1', '1', '1', '1', '1', '1', '0',
+     '0', '1', '1', '1', '1', '1', '1', '1', '1', '0',
+     '0', '0', '1', '1', '1', '1', '1', '1', '0', '0',
+     '0', '0', '0', '0', '1', '1', '0', '0', '0', '0');
 
 begin
 
@@ -158,6 +186,22 @@ begin
 	paddle1_val <= (to_integer(unsigned(paddle1)))*2 + titlesize; -- avoid marquee
 	paddle2_val <= (to_integer(unsigned(paddle2)))*2 + titlesize;
 
+	SP(xPix, yPix, ballx, bally, ball, ballSize, balldraw); -- ball Sprite renderer
+
+	-- update seven segment displays with score
+	hex0(7) <= '1';
+	hex1(7) <= '1';
+	hex2(7 downto 0) <= "10111111";
+	hex3(7 downto 0) <= "10111111";
+	hex4(7) <= '1';
+	hex5(7) <= '1';
+  digit0 : sevsegxdec port map (std_logic_vector(to_unsigned(plyr2Units, 4)), HEX0(6 downto 0));
+  digit1 : sevsegxdec port map (std_logic_vector(to_unsigned(plyr2Tens, 4)), HEX1(6 downto 0));
+--  digit2 : sevsegxdec port map (std_logic_vector(to_unsigned((player2games mod 10), 4)), HEX2(6 downto 0));
+--  digit3 : sevsegxdec port map (std_logic_vector(to_unsigned((player1games mod 10), 4)), HEX3(6 downto 0));
+  digit4 : sevsegxdec port map (std_logic_vector(to_unsigned(plyr1units, 4)), HEX4(6 downto 0));
+  digit5 : sevsegxdec port map (std_logic_vector(to_unsigned(plyr1Tens, 4)), HEX5(6 downto 0));
+	
 	process(xpix, ypix, blank_n)
 		begin
 			VGA_R <= "0000";-- set default to black
@@ -193,7 +237,9 @@ begin
 				VGA_G <= "1111";
 				VGA_B <= "1111";
 			end if;
-			if (ballx > xpix) and (ballx < (xpix + ballsize)) and (bally >ypix) and (bally < (ypix + ballsize)) then
+			-- draw ball
+--			if (ballx > xpix) and (ballx < (xpix + ballsize)) and (bally >ypix) and (bally < (ypix + ballsize)) then
+			if balldraw = '1' then
 				vga_r <= "0000";
 				vga_g <= "0000";
 				vga_b <= "1111";
@@ -313,7 +359,31 @@ begin
 				end if;
 			end if;
 		end process;
-	audio <= sound;
+	process ( blop, pixel_clk, reset )
+		begin
+			if reset = '0' then
+				blopping <= '0';
+			elsif rising_edge( pixel_clk) then
+				if blop = '1' then -- make a noise
+					blopping <= '1';
+				end if;
+				if blopping = '1' then -- make a sound for half a second
+					if bloptime < 2500000 then
+						if blopcount > 12000 then -- make the sound
+							blopcount <= 0;
+							soundb <= not soundb;
+						else
+							blopcount <= blopcount + 1;
+						end if;
+						bloptime <= bloptime + 1;
+					else 
+						bloptime <= 0;
+						blopping <= '0';
+					end if;
+				end if;
+			end if;
+		end process;
+	audio <= sound xor soundb;
 				
 				
 			
